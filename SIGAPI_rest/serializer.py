@@ -1,3 +1,4 @@
+from operator import ge
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
@@ -36,7 +37,7 @@ class CursoSerializer(serializers.HyperlinkedModelSerializer):
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta: 
         model = get_user_model()
-        fields = ["url", "username","password"]
+        fields = ["url","username"]
 
 class CreateUserSerializer(serializers.HyperlinkedModelSerializer):
     password = serializers.CharField(
@@ -61,10 +62,10 @@ class CreateUserSerializer(serializers.HyperlinkedModelSerializer):
 class AlunoSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Aluno
-        fields = ["url"]
+        fields = ["url", "username"]
 
 class CreateAlunoSerializer(serializers.HyperlinkedModelSerializer):
-    user = CreateUserSerializer()
+    user = CreateUserSerializer
 
     class Meta:
         model = Aluno
@@ -85,9 +86,7 @@ class CreateAlunoSerializer(serializers.HyperlinkedModelSerializer):
         def create(self, validated_data):
         
             user_data = validated_data.pop("user")
-
-            user = CreateUserSerializer.create(
-                CreateUserSerializer(), validated_data=user_data)
+            user = UserSerializer.create(UserSerializer(),validated_data=user_data)
             if user.pk:
                 aluno,created = Aluno.objects.update_or_create(
                     user = user,
@@ -133,12 +132,10 @@ class CreateEgressoSerializer(serializers.HyperlinkedModelSerializer):
         def create(self, validated_data):
         
             user_data = validated_data.pop("user")
-
-            user = CreateUserSerializer.create(
-                CreateUserSerializer(), validated_data=user_data)
+            user = CreateUserSerializer.create(CreateUserSerializer(),validated_data=user_data)
             if user.pk:
-                egresso,created = Aluno.objects.update_or_create(
-                    user = user,
+                egresso,created = Egresso.objects.update_or_create(
+                    user = user.pk,
                     matricula = validated_data.pop("matricula"),
                     cpf = validated_data.pop("cpf"),
                     born = validated_data.pop("born"),
@@ -158,9 +155,9 @@ class CreateEgressoSerializer(serializers.HyperlinkedModelSerializer):
             return Response(
                 {"message": "Não pude criar um novo aluno"}, status=406
             )
-            
+                  
 class CreatePaisSerializer(serializers.HyperlinkedModelSerializer):
-    user = CreateUserSerializer()
+    user = CreateUserSerializer
 
     class Meta:
         model = Pais_aluno
@@ -178,8 +175,8 @@ class CreatePaisSerializer(serializers.HyperlinkedModelSerializer):
         
             user_data = validated_data.pop("user")
 
-            user = CreateUserSerializer.create(
-                CreateUserSerializer(), validated_data=user_data)
+            user = UserSerializer.create(
+                UserSerializer(), validated_data=user_data)
             if user.pk:
                 pais,created = Aluno.objects.update_or_create(
                     user = user,
@@ -205,8 +202,7 @@ class ProfessorSerializer(serializers.HyperlinkedModelSerializer):
         fields = ["url", "username", "id"]
 
 class CreateProfessorSerializer(serializers.HyperlinkedModelSerializer):
-    user = CreateUserSerializer()
-
+    user = CreateUserSerializer
     class Meta:
         model = Professor
         fields = [
@@ -225,7 +221,7 @@ class CreateProfessorSerializer(serializers.HyperlinkedModelSerializer):
             )
             if user.pk:
                 professor,created = Professor.objects.update_or_create(
-                    user = user,
+                    user = Professor.objects.filter(pk=user.pk),
                     cpf = validated_data.pop("cpf"),
                     born = validated_data.pop("born"),
                     endereco = validated_data.pop("endereco"),
@@ -296,8 +292,6 @@ class CreateBoletimSerializer(serializers.HyperlinkedModelSerializer):
             if created:
                 return boletim
             return Response({"message": "Não pude criar um novo professor"}, status=406)
-
-    
 
 class CreateFaltasSerializer(serializers.HyperlinkedModelSerializer):
     aluno = AlunoSerializer

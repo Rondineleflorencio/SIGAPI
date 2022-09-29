@@ -1,3 +1,4 @@
+from enum import unique
 from django.db import models
 from django.contrib.auth import get_user_model
 
@@ -12,13 +13,8 @@ class Aluno(models.Model):
         ("C","casado"),
         ("S","solteiro"),
     )
-    user = models.OneToOneField(
-        get_user_model(),
-        primary_key=True,
-        on_delete=models.CASCADE,
-        null=False,
-        related_name="Aluno",
-        )
+    
+    user = models.ForeignKey(get_user_model(),unique=True, on_delete=models.CASCADE,null=False,related_name="Aluno",)
     matricula = models.IntegerField(unique=True)
     endereco = models.CharField(max_length=120)
     born = models.DateField()
@@ -37,6 +33,7 @@ class Egresso(models.Model):
         ("S","solteiro"),
     )
     user = models.OneToOneField(
+        
         get_user_model(),
         primary_key=True,
         on_delete=models.CASCADE,
@@ -73,13 +70,7 @@ class Pais_aluno(models.Model):
 
 class Professor(models.Model):
     """Dados do PROFESSOR"""
-    user = models.OneToOneField(
-        get_user_model(),
-        primary_key=True,
-        on_delete=models.CASCADE,
-        null=False,
-        related_name="Professor",
-        )
+    user = models.ForeignKey(get_user_model(),unique=True, on_delete=models.CASCADE,null=False,related_name="PROFESSOR",)
     cpf = models.IntegerField(unique=True)
     born = models.DateField(verbose_name=str)
     endereco = models.CharField(max_length=50)
